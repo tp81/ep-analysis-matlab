@@ -2,6 +2,10 @@
 % The format of 'a' is a table, where the first column contains the
 % timestamps and the other columns are the signals to be analyzed
 
+% Parameters
+MEDIAN_FILTER_SIZE = 10
+APD_TARGET_LIST = [10 30 40 70 80 90]   % 30,40,70,80 are essential
+
 % What file are we analyzing?
 evalin('base','infile')
 
@@ -10,8 +14,8 @@ data=importdata(infile,'\t',11);
 a=data.data;
 
 % Break down the matrix
-t = a(:,1)*1000;
-V = a(:,2:end);
+t = a(:,1)*1000;        % Expected unit microseconds
+V = a(:,2:end);         % Expected unit Volts
 nsig=size(V,2);
 
 %%
@@ -20,10 +24,10 @@ nsig=size(V,2);
 % * Maximum diastolic polarization
 % * AP amplitude
 % 
-[pv, ipv] = max(V);
-AP_peak_voltage = pv'
-[dv, idv] = min(medfilt1(V,10));
-AP_max_diastolic_polarization = dv'
+[pv, ipv] = max(V);     % gets the max voltage for each column
+AP_peak_voltage = pv'   % column vector with peak voltages
+[dv, idv] = min(medfilt1(V,MEDIAN_FILTER_SIZE));    % filter and minimums
+AP_max_diastolic_polarization = dv'     
 AP_max_diastolic_polarization_time = t(idv);
 AP_amplitude = AP_peak_voltage-AP_max_diastolic_polarization
 AP_peak_voltage_time = t(ipv);
@@ -33,30 +37,32 @@ AP_peak_voltage_time = t(ipv);
 
 %%
 % The smoothed derivative kernel
-hT=t(2)-t(1);
-k=[1 0 -1]'/2/hT;
-ks=[1 2 1]'/4;
-kk=conv(k,ks)
+hT=t(2)-t(1);       % time resolution 
+k=[1 0 -1]'/2/hT;   % derivative kernel
+ks=[1 2 1]'/4;      % smoothing kernel
+kk=conv(k,ks)       % smoothed derivative kernel
 kl2=.5*(length(kk)-1);
 
 % Perform the convolution and determine the dV/dT max
-dV = conv2(V,kk,'valid');
-tdV = t((1+kl2):end-kl2);
+dV = conv2(V,kk,'valid');   
+tdV = t((1+kl2):end-kl2);   
 
 % Only look in a region before the peak
 imdV0 = max(ipv);
 ok = 1:imdV0;
-[mdV, imdV] = max(dV(ok,:));
+[mdV, imdV] = max(dV(ok,:)); % find position of maximum slope
 
 % Use a Gaussian fitting function to fine tune the position 
 dVdTmaxTime=tdV(imdV);
 dVdTmaxAmplitude=mdV';
 dVdTmaxTime_fitted=zeros(nsig,1);
 dVdTmaxAmplitude_fitted=zeros(nsig,1);
-gauss=@(pars,x) pars(1)*exp(-pars(2)*(x-pars(3)).^2);
+gauss=@(pars,x) pars(1)*exp(-pars(2)*(x-pars(3)).^2); % simple Gaussian function
 for i=1:nsig
+    % window of 40 microseconds before and after
     ok=imdV(i)+(-40:40);
     
+    % Least-squares fit
     fit = lsqcurvefit(gauss,[dVdTmaxAmplitude(i) 1 dVdTmaxTime(i)],tdV(ok),dV(ok,i));
     dVdTmaxTime_fitted(i)=fit(3);
     dVdTmaxAmplitude_fitted(i)=fit(1);
@@ -79,7 +85,7 @@ dVdTmaxAmplitude_fitted
 
 %% APDs
 % Here we estimate where the signal reaches APD levels specified here:
-APDs_targets=[10 30 40 70 80 90]
+APDs_targets=APD_TARGET_LIST
 
 %% 
 % Find the 
