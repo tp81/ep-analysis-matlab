@@ -21,3 +21,10 @@ Run `AutomaticEPanalysis_multipleFiles.m` to analyze multiple files in a directo
 ## Outputs
 
 The scripts generate an HTML report for each analyzed file. 
+
+## Acknowledgment and authorship
+
+This code was developed by Thomas Pengo (U of Minnesota Informatics 
+Institute, tpengo@umn.edu) for Prof. Susan Keirstead (U of Minnesota Stem Cell Institute).
+
+
