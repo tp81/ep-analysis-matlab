@@ -1,5 +1,5 @@
-%% Analyze the data matrix 'a'
-% The format of 'a' is a table, where the first column contains the
+%% Analyze the data matrix read from 'infile'
+% The format the table is tab-separated, where the first column contains the
 % timestamps and the other columns are the signals to be analyzed
 
 % Parameters
