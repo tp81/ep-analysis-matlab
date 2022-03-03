@@ -44,7 +44,7 @@ Here is a short summary of the relationship between the different files. See the
 
 Both scripts write to the global variable `infile` and then call the `publish` function in MATLAB passing the name of the `EPanalysis.m` script. The global variable is the simplest way I am aware of to pass parameters to a script that will be `publish`ed.
 
-<img src="./modules.drawio.svg">
+<img src="./doc/modules.drawio.svg">
 
 ## Acknowledgment and authorship
 
